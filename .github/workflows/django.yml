@@ -1,34 +1,35 @@
-name: Django CI/CD with Docker Compose
+name: Django CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  build-and-test:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - name: Build the development container
+        run: docker compose build
+      - name: Run Django tests
+        run: docker compose run --rm web python manage.py test
 
-    - name: Set up Docker Compose
-      run: docker-compose --version
-
-    - name: Build and Run Containers with Docker Compose
-      run: docker-compose up -d
-
-    - name: Run Django Tests
-      run: docker exec ecommerce-web python manage.py test
-
-    # Add additional steps for linting, migrations, or other required actions
-
-    # Optional: Push the Docker image to a registry (like Docker Hub)
-
-    - name: Stop and Remove Containers
-      run: docker-compose down
-
-
-
-
+  publish:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build and publish image
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker build -t "$IMAGE:latest" -t "$IMAGE:${GITHUB_SHA}" .
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:${GITHUB_SHA}"

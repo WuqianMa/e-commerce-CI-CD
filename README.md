@@ -1,72 +1,40 @@
-# Web Application Project -
-## - Session 4 Graded TP -Machine learning in Production
-## Overview
-This project is a e-commerce web application encompassing backend development, frontend interfaces, and database integration. It's a complete showcase demonstrating the integration of multiple technologies including Docker, comprehensive testing strategies, and CI/CD automation using GitHub Actions.
+# Django E-commerce Demo — Docker & CI/CD
 
-### Backend Development: 
-- Language & Framework: **Python & Django.**
-- Responsible for handling business logic, data processing, and server-side operations.
+An educational course project demonstrating a small Django storefront and containerized testing/deployment workflows. This is a portfolio code sample, **not a production e-commerce application**.
 
-### Frontend Development
--Language & Framework: **CSS&HTML&JAVASCRIPTS**
-- Provides a basic but intuitive user interface to interact with the backend.
+## What is included
 
-### Database Integration
-- Implementation using **SQLite** 
-- Handles data storage and retrieval for backend processes.
+- Django models and pages for products, carts, orders, posts and an affiliate-link view.
+- SQLite for local development, Django unit/integration tests, and Docker Compose.
+- GitHub Actions workflow: build a container, run Django tests, then (only on a successful push to main) publish a container image to GitHub Container Registry.
+- Frontend: HTML, CSS and JavaScript. Backend: Python and Django.
 
-### Docker Containers
-- Application containerized using Docker for enhanced portability and deployment ease.
-- Docker Compose utilized for managing multi-container setups.
+## Run locally (Docker)
 
-### Testing
-To do the test, at the root library, run:
-    ```pytest```
-or
-    ```python manage.py test```
+    docker compose up --build
 
-- Unit tests for component reliability.
-- Integration tests for system cohesiveness.
-- End-to-end tests for overall system validation.
+Visit http://localhost:8000/. This binds to localhost only. The demo container runs Django's development server; do **not** expose it on the public internet.
 
-### Automation Pipeline
+To run tests without starting the server:
 
-Development workflow automated with **Git Actions**.
-Ensures continuous integration and delivery for the project.
+    docker compose build
+    docker compose run --rm web python manage.py test
 
-### Deployment
+For local Python development (Python 3.11+), create a virtual environment, install requirements, then set DJANGO_DEBUG=true before running migrations/tests. For any non-development environment set DJANGO_SECRET_KEY to a strong unique secret and configure DJANGO_ALLOWED_HOSTS.
 
-Docker images deployed to GitHub Container Registry, enabling easy version control and distribution.
+## CI and image publishing
 
+The workflow in .github/workflows/django.yml runs the Django test suite for pull requests and pushes to main. Container images are published **only after the test job succeeds on main**. Image tags are latest and the commit SHA under ghcr.io/<lowercase-owner>/<repo>. Publishing uses the built-in GITHUB_TOKEN (no personal-access-token secret needed).
 
-# Setup and Installation
-##### If you would like to use github clone:
-    
-    git clone https://github.com/wuqianma2024/e-commerce-CI-CD.git
-   
+## Limitations / security notes
 
-##### Or you could choose to pull from docker image:
-   
-    docker pull ghcr.io/wuqianma2024/ecommerce-web:v0.1
-  
-##### Then run it:
-    
-    cd e-commerce-CI-CD
-    docker-compose up --build
-   
-##### After running, access the application from your browser:
- 
-    http://localhost:8000
-    
-##### If it works well, you should see this page:
-<img width="1906" alt="image" src="https://github.com/wuqianma2024/e-commerce-CI-CD/assets/115680054/e57f0d0e-6a9b-43bb-b248-3285f9f6d3e8">
+- This is a **course demo, not a finished paid checkout**. The legacy PayPal client-side integration lacked secure backend verification. Real payments and the process_order endpoint are deliberately disabled pending server-side verification, order locking, amount verification and webhook handling.
+- No production-grade deployment, database migrations strategy, authentication/onboarding flow, payments, or concurrency testing is claimed.
+- The repository previously tracked a full venv, local db.sqlite3, chromedriver.exe and Python cache files. These are excluded from the new branch and ignored going forward. Removing files from a branch does **not** erase them from older Git history. If the old SQLite database contained personal information, review it and consider a separate history-rewrite and credential rotation.
+- Keep secrets and private database records out of Git. Existing development credentials in Git history should never be reused.
+- The CI workflow has been updated, but its success should be confirmed via the GitHub Actions run after opening/merging this pull request.
 
+## Provenance
 
-
-##### Contributing: WUQIAN MA
-
-#### License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
-
-
+Originally developed as an Efrei "Machine Learning in Production" course exercise. Updated to make the engineering workflow reproducible and more appropriately scoped for a public portfolio. The original course attribution remains.
 

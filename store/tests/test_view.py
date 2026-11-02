@@ -68,3 +68,39 @@ class UpdateItemViewTest(TestCase):
         order_item = OrderItem.objects.first()
         #check the number of item
         self.assertEqual(order_item.quantity, 1)  # Assuming the item is added
+
+class CheckoutSafetyTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="carttest", password="testpass")
+        Customer.objects.create(user=self.user, name="Cart Tester", email="cart@example.test")
+        self.product = Product.objects.create(name="Test Product", price=12.0)
+
+    def test_anonymous_cart_update_rejected(self):
+        response = self.client.post(
+            reverse("update_item"),
+            {"productId": self.product.id, "action": "add"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_invalid_cart_action_rejected(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("update_item"),
+            {"productId": self.product.id, "action": "unknown"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_invalid_cart_payload_rejected(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("update_item"),
+            data="{invalid json",
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_payment_endpoint_does_not_mark_orders_paid(self):
+        response = self.client.post(reverse("process_order"), data="{}", content_type="application/json")
+        self.assertEqual(response.status_code, 501)

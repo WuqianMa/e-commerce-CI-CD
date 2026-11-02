@@ -1,5 +1,5 @@
-Django
-Pillow
-pytest 
-pytest-django
-selenium
+Django>=5.2,<5.3
+Pillow>=11.3,<13
+pytest>=8,<10
+pytest-django>=4.9,<5
+selenium>=4.25,<5
